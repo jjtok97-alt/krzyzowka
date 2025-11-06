@@ -83,6 +83,10 @@ h1 {
   background: #e57373 !important;
 }
 
+.highlight-final {
+  background: #f9d342 !important;
+}
+
 button {
   margin-top: 20px;
   padding: 10px 25px;
@@ -127,10 +131,6 @@ button:hover {
 .clues li {
   margin: 5px 0;
   line-height: 1.4;
-}
-
-.highlight-final {
-  background: #f9d342 !important;
 }
 
 @media (max-width: 480px) {
@@ -195,7 +195,7 @@ const crossword = document.getElementById('crossword');
 const message = document.getElementById('message');
 crossword.innerHTML = '';
 
-// tworzenie siatki
+// Tworzenie siatki
 crosswordData.forEach((row, i) => {
   row.forEach((cell, j) => {
     const div = document.createElement('div');
@@ -209,13 +209,14 @@ crosswordData.forEach((row, i) => {
       input.dataset.row = i;
       input.dataset.col = j;
       input.addEventListener('input', handleInputMove);
+      input.addEventListener('keydown', handleBackspace);
       div.appendChild(input);
     }
     crossword.appendChild(div);
   });
 });
 
-// automatyczne przechodzenie do kolejnego pola w tym samym wierszu
+// Automatyczne przechodzenie do kolejnego pola w tym samym wierszu
 function handleInputMove(e) {
   const input = e.target;
   const value = input.value.toUpperCase();
@@ -226,12 +227,9 @@ function handleInputMove(e) {
     const col = parseInt(input.dataset.col);
     let nextCol = col + 1;
 
-    // szukamy następnego pola w tym samym wierszu
     while (nextCol < crosswordData[row].length) {
       if (!crosswordData[row][nextCol].empty) {
-        const nextInput = document.querySelector(
-          `input[data-row="${row}"][data-col="${nextCol}"]`
-        );
+        const nextInput = document.querySelector(`input[data-row="${row}"][data-col="${nextCol}"]`);
         if (nextInput) {
           nextInput.focus();
         }
@@ -242,7 +240,27 @@ function handleInputMove(e) {
   }
 }
 
-// sprawdzanie poprawności
+// Backspace usuwa i cofa focus
+function handleBackspace(e) {
+  if (e.key === "Backspace" && !e.target.value) {
+    const row = parseInt(e.target.dataset.row);
+    const col = parseInt(e.target.dataset.col);
+    let prevCol = col - 1;
+    while (prevCol >= 0) {
+      if (!crosswordData[row][prevCol].empty) {
+        const prevInput = document.querySelector(`input[data-row="${row}"][data-col="${prevCol}"]`);
+        if (prevInput) {
+          prevInput.focus();
+          prevInput.value = '';
+        }
+        return;
+      }
+      prevCol--;
+    }
+  }
+}
+
+// Sprawdzanie poprawności
 function checkCrossword() {
   const inputs = document.querySelectorAll('.cell input');
   let allCorrect = true;
@@ -262,7 +280,6 @@ function checkCrossword() {
     }
   });
 
-  // jeśli wszystko poprawne — podświetl hasło WIGILIA
   if (allCorrect) {
     highlightPositions.forEach(([r,c]) => {
       const cellIndex = r * 10 + c;
