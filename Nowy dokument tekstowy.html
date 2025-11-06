@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎄 Świąteczna Krzyżówka 🎅</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #c21807, #1b5e20);
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+h1 {
+  font-weight: 700;
+  text-shadow: 2px 2px 4px #000;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.crossword-container {
+  display: flex;
+  justify-content: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(10, 40px);
+  grid-template-rows: repeat(7, 40px);
+  gap: 4px;
+  background: rgba(255 255 255 / 0.15);
+  padding: 10px;
+  border: 2px solid rgba(255 255 255 / 0.5);
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+.cell {
+  border: 2px solid #e3e3e3;
+  box-sizing: border-box;
+  background: rgba(255 255 255 / 0.85);
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.cell.empty {
+  background: transparent;
+  border: none;
+}
+
+.cell input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  text-transform: uppercase;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  color: #1b5e20;
+}
+
+.cell input:focus {
+  outline: 2px solid #f9d342;
+  background: #fff8e1;
+  color: #c21807;
+}
+
+.correct {
+  background: #81c784 !important;
+}
+
+.incorrect {
+  background: #e57373 !important;
+}
+
+button {
+  margin-top: 20px;
+  padding: 10px 25px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  background-color: #d32f2f;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #b71c1c;
+}
+
+.message {
+  margin-top: 15px;
+  font-size: 1.2rem;
+  text-shadow: 1px 1px 2px #000;
+}
+
+.clues {
+  margin-top: 30px;
+  max-width: 420px;
+  background: rgba(255 255 255 / 0.15);
+  border-radius: 10px;
+  padding: 15px 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
+
+.clues h2 {
+  text-align: center;
+  margin-bottom: 10px;
+  text-shadow: 1px 1px 2px #000;
+}
+
+.clues ol {
+  padding-left: 20px;
+}
+
+.clues li {
+  margin: 5px 0;
+  line-height: 1.4;
+}
+
+.highlight-final {
+  background: #f9d342 !important;
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: repeat(10, 30px);
+    grid-template-rows: repeat(7, 30px);
+    gap: 3px;
+  }
+  .cell input {
+    font-size: 1rem;
+  }
+  button {
+    font-size: 16px;
+  }
+  .clues {
+    max-width: 90%;
+  }
+}
+</style>
+</head>
+<body>
+
+<h1>🎄 Rozwiąż świąteczną krzyżówkę 🎅</h1>
+
+<div class="crossword-container">
+  <div class="grid" id="crossword"></div>
+</div>
+
+<button onclick="checkCrossword()">🎁 Sprawdź krzyżówkę</button>
+<div id="message" class="message"></div>
+
+<div class="clues">
+  <h2>Podpowiedzi</h2>
+  <ol>
+    <li>Na czubku choinki?</li>
+    <li>Świąteczne drzewko?</li>
+    <li>Np. narciarskie?</li>
+    <li>Przynosi prezenty?</li>
+    <li>Jeden z reniferów?</li>
+    <li>Pora roku świąt?</li>
+    <li>Jeździ nimi Mikołaj?</li>
+  </ol>
+</div>
+
+<script>
+// Krzyżówka z kolumną WIGILIA w jednej pionowej kolumnie
+const crosswordData = [
+  [{empty:true},{empty:true},{empty:true},{letter:'G'},{letter:'W'},{letter:'I'},{letter:'A'},{letter:'Z'},{letter:'D'},{letter:'A'}],
+  [{empty:true},{letter:'C'},{letter:'H'},{letter:'O'},{letter:'I'},{letter:'N'},{letter:'K'},{letter:'A'},{empty:true},{empty:true}],
+  [{empty:true},{empty:true},{letter:'G'},{letter:'O'},{letter:'G'},{letter:'L'},{letter:'E'},{empty:true},{empty:true},{empty:true}],
+  [{empty:true},{empty:true},{empty:true},{letter:'M'},{letter:'I'},{letter:'K'},{letter:'O'},{letter:'Ł'},{letter:'A'},{letter:'J'}],
+  [{letter:'R'},{letter:'U'},{letter:'D'},{letter:'O'},{letter:'L'},{letter:'F'},{empty:true},{empty:true},{empty:true},{empty:true}],
+  [{empty:true},{empty:true},{empty:true},{letter:'Z'},{letter:'I'},{letter:'M'},{letter:'A'},{empty:true},{empty:true},{empty:true}],
+  [{empty:true},{empty:true},{empty:true},{letter:'S'},{letter:'A'},{letter:'N'},{letter:'I'},{letter:'E'},{empty:true},{empty:true}]
+];
+
+// indeksy kolumny hasła WIGILIA — wszystkie litery mają kolumnę 4
+const highlightPositions = [
+  [0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[6,4]
+];
+
+const crossword = document.getElementById('crossword');
+const message = document.getElementById('message');
+crossword.innerHTML = '';
+
+crosswordData.forEach((row, i) => {
+  row.forEach((cell, j) => {
+    const div = document.createElement('div');
+    div.classList.add('cell');
+    if (cell.empty) {
+      div.classList.add('empty');
+    } else {
+      const input = document.createElement('input');
+      input.setAttribute('maxlength', '1');
+      input.dataset.letter = cell.letter.toUpperCase();
+      input.dataset.row = i;
+      input.dataset.col = j;
+      div.appendChild(input);
+    }
+    crossword.appendChild(div);
+  });
+});
+
+function checkCrossword() {
+  const inputs = document.querySelectorAll('.cell input');
+  let allCorrect = true;
+  inputs.forEach(input => {
+    const expected = input.dataset.letter;
+    const value = input.value.toUpperCase();
+    if (!value) {
+      input.parentElement.classList.remove('correct', 'incorrect');
+      allCorrect = false;
+    } else if (value === expected) {
+      input.parentElement.classList.add('correct');
+      input.parentElement.classList.remove('incorrect');
+    } else {
+      input.parentElement.classList.add('incorrect');
+      input.parentElement.classList.remove('correct');
+      allCorrect = false;
+    }
+  });
+
+  // jeśli wszystko poprawne — podświetl hasło WIGILIA
+  if (allCorrect) {
+    highlightPositions.forEach(([r,c]) => {
+      const cellIndex = r * 10 + c; // bo 10 kolumn
+      const cell = crossword.children[cellIndex];
+      if (cell && !cell.classList.contains('empty')) {
+        cell.classList.add('highlight-final');
+      }
+    });
+    message.innerHTML = "🎄 Gratulacje! Odgadłeś hasło <strong>WIGILIA</strong> 🎅";
+  } else {
+    message.innerHTML = "🎁 Spróbuj jeszcze raz!";
+  }
+}
+</script>
+
+</body>
+</html>
