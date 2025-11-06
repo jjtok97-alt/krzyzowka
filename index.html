@@ -176,7 +176,7 @@ button:hover {
 </div>
 
 <script>
-// Krzyżówka z kolumną WIGILIA w jednej pionowej kolumnie
+// Krzyżówka z kolumną WIGILIA
 const crosswordData = [
   [{empty:true},{empty:true},{empty:true},{letter:'G'},{letter:'W'},{letter:'I'},{letter:'A'},{letter:'Z'},{letter:'D'},{letter:'A'}],
   [{empty:true},{letter:'C'},{letter:'H'},{letter:'O'},{letter:'I'},{letter:'N'},{letter:'K'},{letter:'A'},{empty:true},{empty:true}],
@@ -187,7 +187,6 @@ const crosswordData = [
   [{empty:true},{empty:true},{empty:true},{letter:'S'},{letter:'A'},{letter:'N'},{letter:'I'},{letter:'E'},{empty:true},{empty:true}]
 ];
 
-// indeksy kolumny hasła WIGILIA — wszystkie litery mają kolumnę 4
 const highlightPositions = [
   [0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[6,4]
 ];
@@ -196,6 +195,7 @@ const crossword = document.getElementById('crossword');
 const message = document.getElementById('message');
 crossword.innerHTML = '';
 
+// tworzenie siatki
 crosswordData.forEach((row, i) => {
   row.forEach((cell, j) => {
     const div = document.createElement('div');
@@ -208,12 +208,41 @@ crosswordData.forEach((row, i) => {
       input.dataset.letter = cell.letter.toUpperCase();
       input.dataset.row = i;
       input.dataset.col = j;
+      input.addEventListener('input', handleInputMove);
       div.appendChild(input);
     }
     crossword.appendChild(div);
   });
 });
 
+// automatyczne przechodzenie do kolejnego pola w tym samym wierszu
+function handleInputMove(e) {
+  const input = e.target;
+  const value = input.value.toUpperCase();
+  input.value = value; // duża litera
+
+  if (value.length === 1) {
+    const row = parseInt(input.dataset.row);
+    const col = parseInt(input.dataset.col);
+    let nextCol = col + 1;
+
+    // szukamy następnego pola w tym samym wierszu
+    while (nextCol < crosswordData[row].length) {
+      if (!crosswordData[row][nextCol].empty) {
+        const nextInput = document.querySelector(
+          `input[data-row="${row}"][data-col="${nextCol}"]`
+        );
+        if (nextInput) {
+          nextInput.focus();
+        }
+        return;
+      }
+      nextCol++;
+    }
+  }
+}
+
+// sprawdzanie poprawności
 function checkCrossword() {
   const inputs = document.querySelectorAll('.cell input');
   let allCorrect = true;
@@ -236,7 +265,7 @@ function checkCrossword() {
   // jeśli wszystko poprawne — podświetl hasło WIGILIA
   if (allCorrect) {
     highlightPositions.forEach(([r,c]) => {
-      const cellIndex = r * 10 + c; // bo 10 kolumn
+      const cellIndex = r * 10 + c;
       const cell = crossword.children[cellIndex];
       if (cell && !cell.classList.contains('empty')) {
         cell.classList.add('highlight-final');
